@@ -1,0 +1,33 @@
+import { twMerge } from "tailwind-merge";
+
+type ClassDictionary = Record<string, boolean | null | undefined>;
+type ClassArray = ClassValue[];
+type ClassValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | ClassDictionary
+  | ClassArray;
+
+function toClassName(value: ClassValue): string {
+  if (!value) return "";
+
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(toClassName).filter(Boolean).join(" ");
+  }
+
+  return Object.entries(value)
+    .filter(([, condition]) => Boolean(condition))
+    .map(([className]) => className)
+    .join(" ");
+}
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(inputs.map(toClassName).filter(Boolean).join(" "));
+}
