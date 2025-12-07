@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import "./App.css";
 
 function App() {
@@ -33,14 +34,14 @@ function App() {
   }
 
   return (
-    <div className="tw-min-h-screen tw-bg-background tw-text-foreground">
-      <header className="tw-border-b">
-        <div className="tw-container tw-flex tw-items-center tw-justify-between tw-gap-4 tw-py-4">
-          <div className="tw-flex tw-items-center tw-gap-3">
-            <img src="/tauri.svg" alt="Tauri" className="tw-h-8 tw-w-8" />
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="border-b">
+        <div className="container flex items-center justify-between gap-4 py-4">
+          <div className="flex items-center gap-3">
+            <img src="/tauri.svg" alt="Tauri" className="h-8 w-8" />
             <div>
-              <p className="tw-text-xs tw-uppercase tw-text-muted-foreground">Dev Helper</p>
-              <p className="tw-text-base tw-font-semibold">Tauri + React + Tailwind</p>
+              <p className="text-xs uppercase text-muted-foreground">Dev Helper</p>
+              <p className="text-base font-semibold">Tauri + React + Tailwind</p>
             </div>
           </div>
 
@@ -49,29 +50,27 @@ function App() {
               <NavigationMenuItem>
                 <NavigationMenuTrigger>Ресурсы</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <ul className="tw-grid tw-gap-3 tw-p-4 tw-md:w-[400px] tw-lg:w-[500px] tw-lg:grid-cols-[.75fr_1fr]">
-                    <li className="tw-row-span-3 tw-h-full">
-                      <Card className="tw-h-full tw-bg-gradient-to-br tw-from-primary/15 tw-to-primary/5">
+                  <ul className="grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                    <li className="row-span-3 h-full">
+                      <Card className="h-full bg-gradient-to-br from-primary/15 to-primary/5">
                         <CardHeader>
                           <CardTitle>Готово к работе</CardTitle>
-                          <CardDescription>
-                            Настроенный стек Vite + Tauri с Tailwind-префиксом для безопасной интеграции.
-                          </CardDescription>
+                          <CardDescription>Настроенный стек Vite + Tauri на Tailwind v4.</CardDescription>
                         </CardHeader>
                       </Card>
                     </li>
                     <li>
-                      <NavigationMenuLink className={navigationMenuTriggerStyle("tw-justify-start tw-gap-2")} href="https://tauri.app">
+                      <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "justify-start gap-2")} href="https://tauri.app">
                         Документация Tauri
                       </NavigationMenuLink>
                     </li>
                     <li>
-                      <NavigationMenuLink className={navigationMenuTriggerStyle("tw-justify-start tw-gap-2")} href="https://ui.shadcn.com">
+                      <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "justify-start gap-2")} href="https://ui.shadcn.com">
                         Компоненты shadcn/ui
                       </NavigationMenuLink>
                     </li>
                     <li>
-                      <NavigationMenuLink className={navigationMenuTriggerStyle("tw-justify-start tw-gap-2")} href="https://tailwindcss.com/docs">
+                      <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "justify-start gap-2")} href="https://tailwindcss.com/docs">
                         Руководство Tailwind
                       </NavigationMenuLink>
                     </li>
@@ -88,9 +87,7 @@ function App() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Shadcn/ui готов</DialogTitle>
-                <DialogDescription>
-                  Базовые UI-компоненты с префиксом Tailwind подключены и готовы к использованию в окне Tauri.
-                </DialogDescription>
+                <DialogDescription>Базовые UI-компоненты на Tailwind v4 подключены и готовы к использованию в окне Tauri.</DialogDescription>
               </DialogHeader>
               <DialogFooter>
                 <DialogPrimitiveClose />
@@ -105,9 +102,9 @@ function App() {
         </div>
       </header>
 
-      <main className="tw-container tw-flex tw-flex-col tw-gap-8 tw-py-10">
+      <main className="container flex flex-col gap-8 py-10">
         <Card>
-          <CardHeader className="tw-flex tw-flex-col tw-gap-1.5 sm:tw-flex-row sm:tw-items-center sm:tw-justify-between">
+          <CardHeader className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle>Приветствие через Tauri</CardTitle>
               <CardDescription>Введите имя и отправьте команду в бэкенд.</CardDescription>
@@ -121,18 +118,18 @@ function App() {
                   <SheetTitle>Быстрые ссылки</SheetTitle>
                   <SheetDescription>Полезные ресурсы для разработки.</SheetDescription>
                 </SheetHeader>
-                <div className="tw-space-y-3">
-                  <Button asChild className="tw-w-full">
+                <div className="space-y-3">
+                  <Button asChild className="w-full">
                     <a href="https://vite.dev" target="_blank" rel="noreferrer">
                       Сайт Vite
                     </a>
                   </Button>
-                  <Button asChild className="tw-w-full" variant="secondary">
+                  <Button asChild className="w-full" variant="secondary">
                     <a href="https://react.dev" target="_blank" rel="noreferrer">
                       Документация React
                     </a>
                   </Button>
-                  <Button asChild className="tw-w-full" variant="ghost">
+                  <Button asChild className="w-full" variant="ghost">
                     <a href="https://tauri.app" target="_blank" rel="noreferrer">
                       Узнать о Tauri
                     </a>
@@ -147,16 +144,16 @@ function App() {
             </Sheet>
           </CardHeader>
 
-          <CardContent className="tw-space-y-6">
+          <CardContent className="space-y-6">
             <form
-              className="tw-grid tw-gap-4 sm:tw-grid-cols-[1fr_auto]"
+              className="grid gap-4 sm:grid-cols-[1fr_auto]"
               onSubmit={(e) => {
                 e.preventDefault();
                 void greet();
               }}
             >
-              <label className="tw-space-y-2">
-                <span className="tw-text-sm tw-font-medium">Имя</span>
+              <label className="space-y-2">
+                <span className="text-sm font-medium">Имя</span>
                 <Input
                   id="greet-input"
                   value={name}
@@ -170,19 +167,19 @@ function App() {
               </Button>
             </form>
 
-            <Tabs defaultValue="result" className="tw-w-full">
+            <Tabs defaultValue="result" className="w-full">
               <TabsList>
                 <TabsTrigger value="result">Результат</TabsTrigger>
                 <TabsTrigger value="tips">Подсказки</TabsTrigger>
               </TabsList>
               <TabsContent value="result">
-                <CardDescription className="tw-rounded-md tw-border tw-bg-muted/40 tw-p-4">
+                <CardDescription className="rounded-md border bg-muted/40 p-4">
                   {greetMsg || "Сообщение появится после вызова команды."}
                 </CardDescription>
               </TabsContent>
               <TabsContent value="tips">
-                <ul className="tw-list-disc tw-space-y-2 tw-pl-6 tw-text-sm tw-text-muted-foreground">
-                  <li>Tailwind использует префикс <code>tw-</code> для безопасной работы в окне Tauri.</li>
+                <ul className="list-disc space-y-2 pl-6 text-sm text-muted-foreground">
+                  <li>Tailwind v4 подключен без префикса — можно использовать утилиты напрямую.</li>
                   <li>Компоненты shadcn/ui находятся в каталоге <code>src/components/ui</code>.</li>
                   <li>Глобальные стили определены в <code>src/index.css</code>.</li>
                 </ul>
