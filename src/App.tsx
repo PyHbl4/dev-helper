@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Settings2, Sparkles, SunMoon, Home } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Home, Settings2, Sparkles, SunMoon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,13 +24,41 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { VoiceHistory } from "@/views/VoiceHistory";
+import { VoiceNew } from "@/views/VoiceNew";
+import { VoiceSettings } from "@/views/VoiceSettings";
 import "./App.css";
 
 type ThemeMode = "light" | "dark";
 
+type NavItem = {
+  label: string;
+  icon: typeof Sparkles;
+  href: string;
+  children?: { label: string; href: string }[];
+};
+
+type FlatNavItem = {
+  label: string;
+  href: string;
+  section?: string;
+};
+
 const THEME_STORAGE_KEY = "dev-helper-theme";
 
-const NAV_ITEMS = [{ label: "Главная", icon: Home, href: "#" }];
+const NAV_ITEMS: NavItem[] = [
+  { label: "Главная", icon: Home, href: "/" },
+  {
+    label: "Голосовой чат",
+    icon: Sparkles,
+    href: "/voice",
+    children: [
+      { label: "Новый чат", href: "/voice/new" },
+      { label: "История", href: "/voice/history" },
+      { label: "Настройки", href: "/voice/settings" },
+    ],
+  },
+];
 
 function App() {
   const [theme, setTheme] = useState<ThemeMode>(() => {
@@ -39,6 +67,8 @@ function App() {
     if (stored === "light" || stored === "dark") return stored;
     return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
+
+  const [path, navigate] = useHashNavigation();
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -54,6 +84,36 @@ function App() {
     []
   );
 
+  const flattenedNav = useMemo<FlatNavItem[]>(
+    () =>
+      NAV_ITEMS.flatMap((item) =>
+        item.children?.length
+          ? item.children.map((child) => ({ ...child, section: item.label }))
+          : [{ label: item.label, href: item.href }]
+      ),
+    []
+  );
+
+  const activePath = path === "/voice" ? "/voice/new" : path;
+  const activeNav = flattenedNav.find((item) => item.href === activePath);
+  const sectionLabel = activeNav?.section ?? activeNav?.label ?? "Главная";
+  const pageTitle = activeNav?.label ?? "Рабочая область";
+
+  const content = useMemo(() => {
+    switch (activePath) {
+      case "/":
+        return <HomeContent heroStats={heroStats} />;
+      case "/voice/new":
+        return <VoiceNew navigate={navigate} />;
+      case "/voice/history":
+        return <VoiceHistory />;
+      case "/voice/settings":
+        return <VoiceSettings />;
+      default:
+        return <HomeContent heroStats={heroStats} />;
+    }
+  }, [activePath, heroStats, navigate]);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SidebarProvider>
@@ -63,10 +123,6 @@ function App() {
               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
                 <Sparkles className="h-4 w-4" />
               </div>
-              {/* <div className="grid">
-                <span className="text-sm font-semibold leading-tight">Dev Helper</span>
-                <span className="text-xs text-muted-foreground">Tauri + React</span>
-              </div> */}
             </div>
             <SidebarTrigger className="ml-auto" />
           </SidebarHeader>
@@ -76,16 +132,37 @@ function App() {
               <SidebarGroupLabel>Навигация</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {NAV_ITEMS.map((item) => (
-                    <SidebarMenuItem key={item.label}>
-                      <SidebarMenuButton asChild isActive>
-                        <a href={item.href}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.label}</span>
-                        </a>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
+                  {NAV_ITEMS.map((item) => {
+                    const hasChildren = Boolean(item.children?.length);
+                    const isParentActive = hasChildren
+                      ? item.children?.some((child) => isPathActive(activePath, child.href))
+                      : isPathActive(activePath, item.href);
+                    const targetHref = hasChildren ? item.children?.[0].href ?? item.href : item.href;
+
+                    return (
+                      <SidebarMenuItem key={item.label}>
+                        <SidebarMenuButton asChild isActive={!hasChildren && Boolean(isParentActive)}>
+                          <a href={`#${targetHref}`}>
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.label}</span>
+                          </a>
+                        </SidebarMenuButton>
+                        {hasChildren ? (
+                          <SidebarMenuSub>
+                            {item.children?.map((child) => (
+                              <SidebarMenuSubButton
+                                key={child.href}
+                                asChild
+                                isActive={isPathActive(activePath, child.href)}
+                              >
+                                <a href={`#${child.href}`}>{child.label}</a>
+                              </SidebarMenuSubButton>
+                            ))}
+                          </SidebarMenuSub>
+                        ) : null}
+                      </SidebarMenuItem>
+                    );
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -118,15 +195,6 @@ function App() {
           </SidebarContent>
 
           <SidebarFooter className="flex flex-col gap-3">
-            {/* <div className="flex items-center gap-2 rounded-md border p-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted">
-                <Palette className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium leading-tight">Темы</p>
-                <p className="text-xs text-muted-foreground leading-tight">Светлая / тёмная</p>
-              </div>
-            </div> */}
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
@@ -149,8 +217,8 @@ function App() {
           <div className="flex flex-1 flex-col">
             <div className="flex items-center justify-between border-b px-6 py-4">
               <div>
-                <p className="text-xs uppercase text-muted-foreground">Главная</p>
-                <h1 className="text-lg font-semibold leading-tight">Рабочая область</h1>
+                <p className="text-xs uppercase text-muted-foreground">{sectionLabel}</p>
+                <h1 className="text-lg font-semibold leading-tight">{pageTitle}</h1>
               </div>
               <div className="flex items-center gap-2">
                 <SidebarTrigger className="hidden sm:inline-flex" />
@@ -166,62 +234,68 @@ function App() {
               </div>
             </div>
 
-            <main className="flex flex-1 flex-col gap-6 p-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Добро пожаловать</CardTitle>
-                  <CardDescription>
-                    Это базовый слой интерфейса: слева — навигация и статус, справа — рабочая область для модулей.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-4 md:grid-cols-3">
-                  {heroStats.map((stat) => (
-                    <div key={stat.label} className="rounded-lg border p-4">
-                      <p className="text-sm text-muted-foreground">{stat.label}</p>
-                      <p className="text-2xl font-semibold">{stat.value}</p>
-                      <p className="text-xs text-muted-foreground">{stat.hint}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Справочная информация</CardTitle>
-                  <CardDescription>Здесь будет рендериться контент модулей.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue="about" className="w-full">
-                    <TabsList>
-                      <TabsTrigger value="about">О приложении</TabsTrigger>
-                      <TabsTrigger value="tips">Подсказки</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="about" className="space-y-3">
-                      <p className="text-sm leading-relaxed text-muted-foreground">
-                        Dev Helper — заготовка на Vite + Tauri + Tailwind v4. Мы используем компоненты shadcn/ui как свой код,
-                        поэтому их можно смело править и адаптировать под задачи.
-                      </p>
-                      <div className="grid gap-3 md:grid-cols-3">
-                        <Skeleton className="h-16 rounded-md" />
-                        <Skeleton className="h-16 rounded-md" />
-                        <Skeleton className="h-16 rounded-md" />
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="tips">
-                      <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-                        <li>Темы переключаются в настройках (светлая / тёмная).</li>
-                        <li>Боковая панель сворачивается по кнопке или горячей клавише ⌘/Ctrl + B.</li>
-                        <li>Добавляй новые модули в навигацию — структура уже готова.</li>
-                      </ul>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            </main>
+            <main className="flex flex-1 flex-col gap-6 p-6">{content}</main>
           </div>
         </SidebarInset>
       </SidebarProvider>
     </div>
+  );
+}
+
+function HomeContent({ heroStats }: { heroStats: { label: string; value: string; hint: string }[] }) {
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Добро пожаловать</CardTitle>
+          <CardDescription>
+            Это базовый слой интерфейса: слева — навигация и статус, справа — рабочая область для модулей.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-3">
+          {heroStats.map((stat) => (
+            <div key={stat.label} className="rounded-lg border p-4">
+              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-2xl font-semibold">{stat.value}</p>
+              <p className="text-xs text-muted-foreground">{stat.hint}</p>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Справочная информация</CardTitle>
+          <CardDescription>Здесь будет рендериться контент модулей.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="about" className="w-full">
+            <TabsList>
+              <TabsTrigger value="about">О приложении</TabsTrigger>
+              <TabsTrigger value="tips">Подсказки</TabsTrigger>
+            </TabsList>
+            <TabsContent value="about" className="space-y-3">
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Dev Helper — заготовка на Vite + Tauri + Tailwind v4. Мы используем компоненты shadcn/ui как свой код, поэтому их
+                можно смело править и адаптировать под задачи.
+              </p>
+              <div className="grid gap-3 md:grid-cols-3">
+                <Skeleton className="h-16 rounded-md" />
+                <Skeleton className="h-16 rounded-md" />
+                <Skeleton className="h-16 rounded-md" />
+              </div>
+            </TabsContent>
+            <TabsContent value="tips">
+              <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+                <li>Темы переключаются в настройках (светлая / тёмная).</li>
+                <li>Боковая панель сворачивается по кнопке или горячей клавише ⌘/Ctrl + B.</li>
+                <li>Добавляй новые модули в навигацию — структура уже готова.</li>
+              </ul>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </>
   );
 }
 
@@ -263,6 +337,51 @@ function SettingsPanel({ theme, onThemeChange }: { theme: ThemeMode; onThemeChan
       </div>
     </SheetContent>
   );
+}
+
+function useHashNavigation(): [string, (next: string) => void] {
+  const getPathFromHash = useCallback(() => {
+    if (typeof window === "undefined") return "/";
+    const rawHash = window.location.hash.replace(/^#/, "");
+    const normalized = rawHash ? (rawHash.startsWith("/") ? rawHash : `/${rawHash}`) : "/";
+    return normalized;
+  }, []);
+
+  const [path, setPath] = useState<string>(getPathFromHash);
+
+  const updateFromHash = useCallback(() => {
+    const nextPath = getPathFromHash();
+    setPath(nextPath === "/voice" ? "/voice/new" : nextPath);
+  }, [getPathFromHash]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    window.addEventListener("hashchange", updateFromHash);
+    return () => window.removeEventListener("hashchange", updateFromHash);
+  }, [updateFromHash]);
+
+  const navigate = useCallback(
+    (next: string) => {
+      if (typeof window === "undefined") return;
+      const normalized = next.startsWith("/") ? next : `/${next}`;
+      const target = normalized === "/voice" ? "/voice/new" : normalized;
+      window.location.hash = target;
+      setPath(target);
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (path === "/voice") {
+      navigate("/voice/new");
+    }
+  }, [navigate, path]);
+
+  return [path === "/voice" ? "/voice/new" : path, navigate];
+}
+
+function isPathActive(current: string, href: string) {
+  return current === href || current.startsWith(`${href}/`);
 }
 
 export default App;
